@@ -19,7 +19,22 @@ I will add to these as I support new miners in my mining rig. Dual mining is not
 
 ### Installation
 
-TODO
+Bootstrap it onto a new box with:
+
+```shell
+curl -L https://raw.githubusercontent.com/gdhaworth/mining-prometheus-collector/main/scripts/bootstrap.sh | bash -
+```
+
+The bootstrap and installation scripts assume you have the packages installed and environment of a Minerstat MSOS
+installation. That means:
+
+- `sudo` does not require a password
+- `git` is installed
+- `systemd` is present
+
+The bootstrap/installation will set up [pyenv](https://github.com/pyenv/pyenv) for itself and selfishly install
+packages without a `virtualenv` (because this is on a MSOS box that shouldn't care). If I extend this project
+beyond Minerstat I will add ways to make this more portable (can turn parts off, etc).
 
 **NOTE** This is an update from code I had written 3 years ago in a private repo which originally supported both Linux
 and Windows. I have only been using Linux since updating and starting this repository, but it shouldn't take much effort

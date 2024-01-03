@@ -1,0 +1,15 @@
+[Unit]
+After=network-online.target time-sync.target
+Requires=network-online.target
+
+[Service]
+Type=exec
+WorkingDirectory=/opt/share/mining-prometheus-collector
+User=minerstat
+Group=minerstat
+ExecStart=REPLACE_PYTHON_BIN main.py
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

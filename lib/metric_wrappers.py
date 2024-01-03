@@ -1,9 +1,6 @@
-import operator
-
 from collections import OrderedDict
 from collections.abc import Callable
 from enum import Enum
-from functools import reduce
 from prometheus_client.core import Metric, GaugeMetricFamily, CounterMetricFamily
 from typing import Dict, Sequence, Any, Optional
 
