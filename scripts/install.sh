@@ -2,6 +2,8 @@
 
 set -ex
 
+NVIDIA_EXPORTER_VERSION='1.2.0'
+
 if [[ "$(id -un)" == 'root' ]]; then
     echo 'Error: running as root, should run as normal user with sudo privileges'
     exit 1
@@ -18,7 +20,7 @@ if [[ ! -d "$HOME/.pyenv" ]]; then
 fi
 
 export PYENV_ROOT="$HOME/.pyenv"
-command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+export PATH="$PYENV_ROOT/bin:$PATH"
 set +x
 eval "$(pyenv init -)"
 set -x
@@ -29,15 +31,32 @@ if ! pyenv versions | fgrep "$DESIRED_PYTHON" > /dev/null; then
 fi
 
 cd /opt/share/mining-prometheus-collector
+sudo git pull origin main
 
 pip install --upgrade pip
 pip install -r requirements.txt
 
-cp etc/mining-collector.service "$HOME"
+WORKDIR="$(mktemp -d)"
+trap 'rm -rf -- "$WORKDIR"' EXIT
+
+cp etc/mining-collector.service "$WORKDIR"
 REPLACE_PYTHON_BIN="$(pyenv which python)"
-sed -ri 's|REPLACE_PYTHON_BIN|'"$REPLACE_PYTHON_BIN"'|' "$HOME/mining-collector.service"
-sudo cp "$HOME/mining-collector.service" /etc/systemd/system
-rm "$HOME/mining-collector.service"
+sed -ri 's|REPLACE_PYTHON_BIN|'"$REPLACE_PYTHON_BIN"'|' "$WORKDIR/mining-collector.service"
+sudo cp "$WORKDIR/mining-collector.service" /etc/systemd/system
+
+sudo cp etc/nvidia_gpu_exporter.service /etc/systemd/system
+cd "$WORKDIR"
+EXPORTER_TAR="nvidia_gpu_exporter_${NVIDIA_EXPORTER_VERSION}_linux_x86_64.tar.gz"
+wget "https://github.com/utkuozdemir/nvidia_gpu_exporter/releases/download/v$NVIDIA_EXPORTER_VERSION/$EXPORTER_TAR"
+tar xf $EXPORTER_TAR
+sudo mv nvidia_gpu_exporter /usr/local/bin
+sudo chown root:root /usr/local/bin/nvidia_gpu_exporter
+if ! fgrep nvidia_gpu_exporter /etc/passwd > /dev/null; then
+    sudo useradd -r -s /sbin/nologin -md /var/lib/nvidia_gpu_exporter nvidia_gpu_exporter
+fi
+
 sudo systemctl daemon-reload
 sudo systemctl enable --now mining-collector.service
 sudo systemctl status mining-collector.service
+sudo systemctl enable --now nvidia_gpu_exporter.service
+sudo systemctl status nvidia_gpu_exporter.service

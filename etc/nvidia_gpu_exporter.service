@@ -1,0 +1,16 @@
+[Unit]
+After=network-online.target time-sync.target
+Requires=network-online.target
+
+[Service]
+Type=simple
+User=nvidia_gpu_exporter
+Group=nvidia_gpu_exporter
+WorkingDirectory=/var/lib/nvidia_gpu_exporter
+ExecStart=/usr/local/bin/nvidia_gpu_exporter
+SyslogIdentifier=nvidia_gpu_identifier
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
