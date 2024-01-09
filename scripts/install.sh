@@ -56,7 +56,9 @@ if ! fgrep nvidia_gpu_exporter /etc/passwd > /dev/null; then
 fi
 
 sudo systemctl daemon-reload
-sudo systemctl enable --now mining-collector.service
+sudo systemctl enable mining-collector.service
+sudo systemctl restart mining-collector.service
 sudo systemctl status mining-collector.service
-sudo systemctl enable --now nvidia_gpu_exporter.service
+sudo systemctl enable nvidia_gpu_exporter.service
+sudo systemctl restart nvidia_gpu_exporter.service
 sudo systemctl status nvidia_gpu_exporter.service

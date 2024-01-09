@@ -4,7 +4,8 @@ Collects mining status data from detected miners for prometheus ingestion. Each 
 miner's API, so the data received will be live (not cached).
 
 Some of the supported miners don't have great (or any) API documentation so in those cases I may have had to guess what
-specific parts are to "standardize" them between miners.
+specific parts are to "standardize" them between miners. I haven't come up with a properly "standardized" set of metrics
+yet; I will do once several miners are integrated.
 
 **NOTE** This was designed to be run inside a Minerstat MSOS instance, so IPs/ports, etc, are hard-coded. I might be
 changing this to be more independent in the near future (1/2024).
@@ -13,6 +14,7 @@ changing this to be more independent in the near future (1/2024).
 ### Supported miners
 
 - `t-rex`
+- `lolminer`
 
 I will add to these as I support new miners in my mining rig. Dual mining is not supported (yet).
 

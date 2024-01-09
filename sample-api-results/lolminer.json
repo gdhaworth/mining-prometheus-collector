@@ -1,0 +1,77 @@
+{
+    "Software": "lolMiner 1.82a",
+    "Session": {
+        "Startup": 1704340100,
+        "Startup_String": "2024-01-03_21-48-20",
+        "Uptime": 15244,
+        "Last_Update": 1704355345
+    },
+    "Num_Workers": 2,
+    "Workers": [
+        {
+            "Index": 0,
+            "Name": "NVIDIA GeForce RTX 3070",
+            "Power": 92.433000000000007,
+            "CCLK": 1470,
+            "MCLK": 810,
+            "Core_Temp": 35,
+            "Juc_Temp": 47,
+            "Mem_Temp": 0,
+            "Fan_Speed": 100,
+            "LHR_Unlock_Pct": 0,
+            "Dual_Factor": 0,
+            "PCIE_Address": "7:0"
+        },
+        {
+            "Index": 1,
+            "Name": "NVIDIA GeForce RTX 3070",
+            "Power": 87.241,
+            "CCLK": 1470,
+            "MCLK": 810,
+            "Core_Temp": 37,
+            "Juc_Temp": 48,
+            "Mem_Temp": 0,
+            "Fan_Speed": 100,
+            "LHR_Unlock_Pct": 0,
+            "Dual_Factor": 0,
+            "PCIE_Address": "8:0"
+        }
+    ],
+    "Num_Algorithms": 1,
+    "Algorithms": [
+        {
+            "Algorithm": "HeavyHash-Pyrin",
+            "Algorithm_Appendix": "",
+            "Pool": "us2.pyrin.herominers.com:1177",
+            "User": "pyrin:bUG7ohr7h36R2PRbRG3GyfKYpv96yP642vC2Pcq5nNYoNsmPv9sd4TmBvD9S.3070",
+            "Worker": "",
+            "Performance_Unit": "Mh\/s",
+            "Performance_Factor": 1000000,
+            "Total_Performance": 8611.0771846521693,
+            "Total_Accepted": 975,
+            "Total_Rejected": 0,
+            "Total_Stales": 0,
+            "Total_Errors": 0,
+            "Worker_Performance": [
+                4305.60,
+                4305.48
+            ],
+            "Worker_Accepted": [
+                496,
+                479
+            ],
+            "Worker_Rejected": [
+                0,
+                0
+            ],
+            "Worker_Stales": [
+                0,
+                0
+            ],
+            "Worker_Errors": [
+                0,
+                0
+            ]
+        }
+    ]
+}

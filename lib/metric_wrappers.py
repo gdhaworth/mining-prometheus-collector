@@ -1,14 +1,9 @@
+import dictlib
+
 from collections import OrderedDict
 from collections.abc import Callable
-from enum import Enum
 from prometheus_client.core import Metric, GaugeMetricFamily, CounterMetricFamily
 from typing import Dict, Sequence, Any, Optional
-
-
-class LookupType(Enum):
-    DIRECT = 1
-    VALUE_PATH = 2
-    CALLABLE = 3
 
 
 class WrMetric:
@@ -18,24 +13,24 @@ class WrMetric:
                  labels: Sequence[str],
                  desc: str,
                  value_path: str,
-                 transform: Callable[[Any], float | Optional[float]] = None
+                 transform: Callable[[Any, ...], float | Optional[float]] = None
                  ):
         full_name = f'mining_{name}'
         self.value_path = value_path
         self.transform = transform
-        self._metric = metric_class(name=full_name, documentation=desc, labels=labels)
+        self._labels = list(labels)
+        self._metric = metric_class(name=full_name, documentation=desc, labels=self._labels)
 
     @staticmethod
-    def value_at_path(base: Dict, path: str) -> Optional[Any]:
-        value = base
-        for key in path.split('.'):
-            if key not in value.keys():
-                return None
-            value = value[key]
-        return value
+    def value_at_path(base: Dict, path: str, i: int) -> Optional[Any]:
+        if path == '.':
+            return base
+        if i is not None:
+            path = path.replace('[i]', f'[{i}]')
+        return dictlib.dig(base, path)
 
     @staticmethod
-    def label_to_str(value):
+    def label_as_str(value) -> str:
         if value is None:
             return 'null'
         if isinstance(value, bool):
@@ -43,29 +38,55 @@ class WrMetric:
         return str(value)
 
     @staticmethod
-    def parse_label_values(base: Dict, label_descs: OrderedDict[str, Dict]) -> OrderedDict[str, str]:
+    def lookup_str_value(base: Dict, desc: Dict, i: int) -> Optional[str]:
+        if 'value' in desc.keys():
+            int_result = desc['value']
+        elif 'path' in desc.keys():
+            int_result = WrMetric.value_at_path(base, desc['path'], i)
+        else:
+            int_result = base
+
+        if 'join' in desc.keys():
+            int_result = ' '.join([WrMetric.value_at_path(int_result, path, i) for path in desc['join']])
+
+        if 'transform' in desc.keys():
+            int_result = desc['transform'](int_result)
+
+        if 'coalesce' in desc.keys():
+            for desc_coalesced in desc['coalesce']:
+                c_result = WrMetric.lookup_str_value(int_result, desc_coalesced, i)
+                if c_result is not None and (not isinstance(c_result, str) or len(c_result) > 0):
+                    return c_result
+            return None
+
+        return int_result
+
+    @staticmethod
+    def parse_label_values(base: Dict, label_descs: OrderedDict[str, Dict], i: int = None) -> OrderedDict[str, str]:
         result = OrderedDict()
         for name, desc in label_descs.items():
-            if desc['type'] == LookupType.DIRECT:
-                result[name] = WrMetric.label_to_str(desc['value'])
-            elif desc['type'] == LookupType.VALUE_PATH:
-                result[name] = WrMetric.label_to_str(WrMetric.value_at_path(base, desc['path']))
-            elif desc['type'] == LookupType.CALLABLE:
-                result[name] = WrMetric.label_to_str(desc['func'](base))
-            else:
-                # this is a coding error, should not happen unless misconfigured
-                raise f'Unknown label type: {desc["type"]}'
+            result[name] = WrMetric.label_as_str(WrMetric.lookup_str_value(base, desc, i))
         return result
 
-    def add_value(self, base: Dict, labels: Dict[str, str], timestamp: Optional[float] = None) -> None:
-        value = self.value_at_path(base, self.value_path)
+    def add_value(self, base: Dict, labels: Dict[str, str], timestamp: Optional[float] = None, i: int = None) -> None:
+        value = self.value_at_path(base, self.value_path, i)
         if value is None:
             return
         if self.transform:
-            value = self.transform(value)
+            value = self.transform(value, i)
         if value is None:
             return
-        self._metric.add_metric(value=float(value), labels=list(labels.values()), timestamp=timestamp)
+        # TODO make the raise optional at runtime, but this is likely a programming error, not something unexpected from
+        # the api
+        if list(labels.keys()) != self._labels:
+            print(self._labels)
+            print(list(labels.keys()))
+            raise 'Labels do not match'
+
+        # Make sure they're in order... yes paranoid but no unit tests yet
+        label_values = [labels[label] for label in self._labels]
+
+        self._metric.add_metric(value=float(value), labels=label_values, timestamp=timestamp)
 
     @property
     def metric(self) -> Metric:

@@ -11,6 +11,7 @@ from prometheus_client.core import REGISTRY
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'lib'))
 from abstract_miner_collector import AbstractMinerCollector, NoSupportedMinerCollector
 import trex_collector
+import lolminer_collector
 
 
 class MiningCollector:
@@ -18,12 +19,16 @@ class MiningCollector:
     def find_collector() -> AbstractMinerCollector:
         if 'DEBUG_MOCK_TREX' in os.environ:
             return trex_collector.instance()
+        elif 'DEBUG_MOCK_LOLMINER' in os.environ:
+            return lolminer_collector.instance()
 
         for proc in psutil.process_iter():
             try:
                 name = proc.name().lower()
                 if 't-rex' in name:
                     return trex_collector.instance()
+                if 'lolminer' in name:
+                    return lolminer_collector.instance()
             except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess):
                 traceback.print_exc()
 
