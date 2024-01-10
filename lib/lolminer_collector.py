@@ -124,10 +124,12 @@ GPU_GAUGE_METRICS = OrderedDict(
     gpu_clock_core = {
         'desc': 'GPU core clock speed',
         'value_path': 'Workers[i].CCLK',
+        'transform': transformers.mul(1000 * 1000),
     },
     gpu_clock_memory = {
         'desc': 'GPU memory clock speed',
         'value_path': 'Workers[i].MCLK',
+        'transform': transformers.mul(1000 * 1000),
     },
     gpu_temperature_core = {
         'desc': 'GPU core temperature',

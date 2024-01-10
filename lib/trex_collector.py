@@ -190,10 +190,12 @@ GPU_GAUGE_METRICS = OrderedDict(
     gpu_clock_core = {
         'desc': 'GPU core clock speed',
         'value_path': 'cclock',
+        'transform': transformers.mul(1000 * 1000),
     },
     gpu_clock_memory = {
         'desc': 'GPU memory clock speed',
         'value_path': 'mclock',
+        'transform': transformers.mul(1000 * 1000),
     },
     gpu_mtweak = {
         'desc': 'GPU mtweak',

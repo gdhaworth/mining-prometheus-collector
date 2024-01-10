@@ -4,7 +4,7 @@ import os
 import platform
 import re
 
-from typing import Optional, Dict
+from typing import Optional, Dict, Callable
 
 
 if 'DEBUG_MOCK_HOSTNAME' in os.environ:
@@ -35,6 +35,12 @@ def si_suffixed(value: str, *_) -> Optional[float]:
     elif si_suffix == 't':
         mult = 1000 ^ 4
     return float(match[1]) * mult
+
+
+def mul(x) -> Callable:
+    def func(y, *_):
+        return x * y
+    return func
 
 
 def worker_from_user_field(user_value: str, *_) -> str:
