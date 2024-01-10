@@ -1,8 +1,10 @@
 import os
+import pathlib
 import psutil
 import sys
 import time
 import traceback
+import yaml
 
 from prometheus_client import start_http_server
 from prometheus_client.core import REGISTRY
@@ -10,25 +12,35 @@ from prometheus_client.core import REGISTRY
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'lib'))
 from abstract_miner_collector import AbstractMinerCollector, NoSupportedMinerCollector
-import trex_collector
-import lolminer_collector
+from trex_collector import TrexCollector
+from lolminer_collector import LolminerCollector
 
 
 class MiningCollector:
-    @staticmethod
-    def find_collector() -> AbstractMinerCollector:
+    def __init__(self):
+        config_file = pathlib.Path(__file__).parent / 'config.yaml'
+        if config_file.exists():
+            with config_file.open('r') as f:
+                self.config = yaml.full_load(f)
+        else:
+            self.config = None
+
+        # from pprint import pprint
+        # pprint(self.config)
+
+    def find_collector(self) -> AbstractMinerCollector:
         if 'DEBUG_MOCK_TREX' in os.environ:
-            return trex_collector.instance()
+            return TrexCollector(self.config)
         elif 'DEBUG_MOCK_LOLMINER' in os.environ:
-            return lolminer_collector.instance()
+            return LolminerCollector(self.config)
 
         for proc in psutil.process_iter():
             try:
                 name = proc.name().lower()
                 if 't-rex' in name:
-                    return trex_collector.instance()
+                    return TrexCollector(self.config)
                 if 'lolminer' in name:
-                    return lolminer_collector.instance()
+                    return LolminerCollector(self.config)
             except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess):
                 traceback.print_exc()
 

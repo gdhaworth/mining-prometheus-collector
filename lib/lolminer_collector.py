@@ -4,7 +4,7 @@ from abstract_miner_collector import AbstractMinerJsonCollector
 from metric_wrappers import WrMetric
 
 from collections import OrderedDict
-from functools import cache, partial
+from functools import partial
 from typing import List
 
 
@@ -161,22 +161,24 @@ class LolminerCollector(AbstractMinerJsonCollector):
         return 'http://127.0.0.1:3333/'
 
     def json_collect(self, request_time: float, json_data) -> List[WrMetric]:
-        metrics = self.create_miner_metrics(MINER_LABELS, MINER_COUNTER_METRICS, MINER_GAUGE_METRICS)
+        label_keys = list(MINER_LABELS.keys())
+        metrics = self.create_counter_gauge_metrics(MINER_COUNTER_METRICS, MINER_GAUGE_METRICS, label_keys)
         labels = WrMetric.parse_label_values(json_data, MINER_LABELS)
         for metric in metrics:
             metric.add_value(base=json_data, labels=labels, timestamp=request_time)
 
-        gpu_metrics = self.create_gpu_metrics(MINER_LABELS, GPU_LABELS, GPU_COUNTER_METRICS, GPU_GAUGE_METRICS)
+        gpu_general_label_keys = list(label_keys)
+        all_gpu_labels = OrderedDict(GPU_LABELS)
+        all_gpu_labels.update(self.addl_gpu_labels_from_config(transformers.pcie_bus_slot_str_to_id,
+                                                               'Workers[i].PCIE_Address'))
+        gpu_general_label_keys.extend(list(all_gpu_labels.keys()))
+
+        gpu_metrics = self.create_counter_gauge_metrics(GPU_COUNTER_METRICS, GPU_GAUGE_METRICS, gpu_general_label_keys)
         for i in range(len(json_data['Workers'])):
             gpu_labels = OrderedDict(labels)
-            gpu_labels.update(WrMetric.parse_label_values(json_data, GPU_LABELS, i))
+            gpu_labels.update(WrMetric.parse_label_values(json_data, all_gpu_labels, i))
             for metric in gpu_metrics:
                 metric.add_value(base=json_data, labels=gpu_labels, timestamp=request_time, i=i)
         metrics.extend(gpu_metrics)
 
         return metrics
-
-
-@cache
-def instance() -> AbstractMinerJsonCollector:
-    return LolminerCollector()

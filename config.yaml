@@ -1,0 +1,30 @@
+gpus:
+  cmv-3090:
+  - uuid: e223a7bd-7f57-0c93-72c4-d5e3cd20f304
+    vbios: 94.02.42.C0.05
+    pci_id: 07:00
+    addl_labels:
+      common_gpu_name: 3090 FTW3 Ultra
+  cmv-3080L:
+  - uuid: 7a5df24e-7a2d-2f88-235d-c13be04afa65
+    vbios: 94.02.85.40.0A
+    pci_id: 07:00
+    addl_labels:
+      common_gpu_name: 3080 12GB FTW3 Ultra
+  cmv-3070Ti:
+  - uuid: 7d0db906-af55-2ca8-ded7-e2d4a513a901
+    vbios: 94.04.5A.00.F2
+    pci_id: 07:00
+    addl_labels:
+      common_gpu_name: 3070 Ti FTW3 Ultra
+  cmv-3070:
+  - uuid: f58a04de-fa41-bbfc-7e9a-6af6f5031078
+    vbios: 94.04.25.80.6E
+    pci_id: 07:00
+    addl_labels:
+      common_gpu_name: 3070 FTW3 Ultra
+  - uuid: 56cf154f-b32c-fd3a-5fc5-1ace14baee3f
+    vbios: 94.04.3A.40.5D
+    pci_id: 08:00
+    addl_labels:
+      common_gpu_name: 3070 XC3 Black

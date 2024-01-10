@@ -1,13 +1,18 @@
 import dictlib
 import math
+import os
 import platform
 import re
 
 from typing import Optional, Dict
 
 
-def hostname(*_):
-    return platform.node()
+if 'DEBUG_MOCK_HOSTNAME' in os.environ:
+    def hostname(*_):
+        return os.environ['DEBUG_MOCK_HOSTNAME']
+else:
+    def hostname(*_):
+        return platform.node()
 
 
 def mining_platform(*_):

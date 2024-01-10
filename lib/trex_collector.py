@@ -10,6 +10,9 @@ from functools import cache, partial
 from typing import List
 
 
+xform_gpu_pci_id = partial(transformers.pcie_bus_slot_paths_to_id, 'pci_bus', 'pci_id')
+
+
 MINER_LABELS = OrderedDict(
     host = {
         'transform': transformers.hostname,
@@ -120,7 +123,7 @@ GPU_LABELS = OrderedDict(
         'path': 'uuid',
     },
     device_pci_id = {
-        'transform': partial(transformers.pcie_bus_slot_paths_to_id, 'pci_bus', 'pci_id'),
+        'transform': xform_gpu_pci_id,
     },
     trex_potentially_unstable = {
         'path': 'potentially_unstable',
@@ -227,23 +230,25 @@ class TrexCollector(AbstractMinerJsonCollector):
         port = '3333' if running_linux else '4068'
         return f'http://127.0.0.1:{port}/summary'
 
+    # TODO deduplicate code from lolminer
     def json_collect(self, request_time: float, json_data) -> List[WrMetric]:
-        metrics = self.create_miner_metrics(MINER_LABELS, MINER_COUNTER_METRICS, MINER_GAUGE_METRICS)
+        label_keys = list(MINER_LABELS.keys())
+        metrics = self.create_counter_gauge_metrics(MINER_COUNTER_METRICS, MINER_GAUGE_METRICS, label_keys)
         labels = WrMetric.parse_label_values(json_data, MINER_LABELS)
         for metric in metrics:
             metric.add_value(base=json_data, labels=labels, timestamp=request_time)
 
-        gpu_metrics = self.create_gpu_metrics(MINER_LABELS, GPU_LABELS, GPU_COUNTER_METRICS, GPU_GAUGE_METRICS)
+        gpu_general_label_keys = list(label_keys)
+        all_gpu_labels = OrderedDict(GPU_LABELS)
+        all_gpu_labels.update(self.addl_gpu_labels_from_config(xform_gpu_pci_id))
+        gpu_general_label_keys.extend(list(all_gpu_labels.keys()))
+
+        gpu_metrics = self.create_counter_gauge_metrics(GPU_COUNTER_METRICS, GPU_GAUGE_METRICS, gpu_general_label_keys)
         for gpu in json_data['gpus']:
             gpu_labels = OrderedDict(labels)
-            gpu_labels.update(WrMetric.parse_label_values(gpu, GPU_LABELS))
+            gpu_labels.update(WrMetric.parse_label_values(gpu, all_gpu_labels))
             for metric in gpu_metrics:
                 metric.add_value(base=gpu, labels=gpu_labels, timestamp=request_time)
         metrics.extend(gpu_metrics)
 
         return metrics
-
-
-@cache
-def instance() -> AbstractMinerJsonCollector:
-    return TrexCollector()
